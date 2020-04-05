@@ -16,7 +16,9 @@ public static final String EXTRA_CRIME_ID =
 
     @Override
     protected Fragment createFragment(){
-        return new CrimeFragment();
+//        return new CrimeFragment();
+        UUID crimeId = (UUID) getIntent().getSerializableExtra(EXTRA_CRIME_ID);
+        return CrimeFragment.newInstance(crimeId);
     }
 
     public static Intent newIntent(Context packageContext, UUID crimeId){
