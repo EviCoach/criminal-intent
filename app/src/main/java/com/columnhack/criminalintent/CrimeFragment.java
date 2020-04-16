@@ -2,6 +2,7 @@ package com.columnhack.criminalintent;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
@@ -22,6 +23,7 @@ import android.widget.RadioGroup;
 import android.widget.Toast;
 import android.text.format.DateFormat;
 
+import androidx.core.app.ShareCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 
@@ -32,7 +34,7 @@ import static android.widget.CompoundButton.*;
 
 public class CrimeFragment extends Fragment {
 
-    private static final int REQUEST_CONTACT = 0;
+    private static final int REQUEST_CONTACT = 1;
     private static final String ARG_CRIME_ID = "crime_id";
     private static final String DIALOG_DATE = "DialogDate";
 
@@ -137,17 +139,26 @@ public class CrimeFragment extends Fragment {
         mReportButton.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view){
-                Intent i = new Intent(Intent.ACTION_SEND);
-                i.setType("text/plain");
-                i.putExtra(Intent.EXTRA_TEXT, getCrimeReport());
-                i.putExtra(Intent.EXTRA_SUBJECT, getString(R.string.crime_report_subject));
-                i.createChooser(i, getString(R.string.send_report));
+//                Intent i = new Intent(Intent.ACTION_SEND);
+//                i.setType("text/plain");
+//                i.putExtra(Intent.EXTRA_TEXT, getCrimeReport());
+//                i.putExtra(Intent.EXTRA_SUBJECT, getString(R.string.crime_report_subject));
+//                i.createChooser(i, getString(R.string.send_report));
+//                startActivity(i);
+                Intent i = ShareCompat.IntentBuilder.from(getActivity())
+                        .createChooserIntent()
+                        .setAction(Intent.ACTION_SEND)
+                        .setType("text/plain")
+                        .putExtra(Intent.EXTRA_TEXT, getCrimeReport())
+                        .putExtra(Intent.EXTRA_SUBJECT, getString(R.string.crime_report_subject));
                 startActivity(i);
             }
         });
 
         final Intent pickContact = new Intent(Intent.ACTION_PICK,
                 ContactsContract.Contacts.CONTENT_URI);
+        // This prevents any activity from matching your Intent search
+        // pickContact.addCategory(Intent.CATEGORY_HOME);
         mSuspectButton = (Button) v.findViewById(R.id.crime_suspect);
         mSuspectButton.setOnClickListener(new View.OnClickListener(){
             @Override
@@ -155,6 +166,18 @@ public class CrimeFragment extends Fragment {
                 startActivityForResult(pickContact, REQUEST_CONTACT);
             }
         });
+
+        if(mCrime.getSuspect() != null){
+            mSuspectButton.setText(mCrime.getSuspect());
+        }
+
+        PackageManager packageManager = getActivity().getPackageManager();
+        // Find an activity that matches pickContact intent,
+        // If it doesn't exit, disable the button
+        if(packageManager.resolveActivity(pickContact,
+                PackageManager.MATCH_DEFAULT_ONLY) == null){
+            mSuspectButton.setEnabled(false);
+        }
         return v;
     } // ends onCreateView
 
@@ -186,7 +209,7 @@ public class CrimeFragment extends Fragment {
                 c.moveToFirst();
                 String suspect = c.getString(0);
                 mCrime.setSuspect(suspect);
-                mSuspectButton.setTag(suspect);
+                mSuspectButton.setText(suspect);
             } finally {
                 c.close();
             }
@@ -201,7 +224,8 @@ public class CrimeFragment extends Fragment {
     }
 
     private void updateDate() {
-        mDateButton.setText(mCrime.getDate().toString());
+        String date = mCrime.getDate().toString();
+        mDateButton.setText(date);
     }
 
     private String getCrimeReport(){
