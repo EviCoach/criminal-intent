@@ -47,7 +47,8 @@ public class CrimePagerActivity extends AppCompatActivity {
         });
 
 //        mViewPager.setOffscreenPageLimit(20);
-
+        // to prevent the view pager starting all over
+        // from the first one
         for(int i = 0; i < mCrimes.size(); i++){
             if(mCrimes.get(i).getId().equals(crimeId)){
                 mViewPager.setCurrentItem(i);
